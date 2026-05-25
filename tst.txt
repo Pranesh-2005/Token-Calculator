@@ -1,0 +1,34 @@
+Hello world.
+
+This is a simple token counting test file.
+
+OpenAI GPT tokenization works differently from word counting.
+Some words become multiple tokens.
+
+Python code example:
+
+def add(a, b):
+    return a + b
+
+JSON example:
+
+{
+  "name": "Pranesh",
+  "role": "developer",
+  "skills": ["Python", "AI", "FastAPI"]
+}
+
+Mathematical expression:
+
+x_t = αx_(t−1) + β
+
+URL:
+https://openai.com
+
+Email:
+test@example.com
+
+Repeated text:
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+End of test file.
