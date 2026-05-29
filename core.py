@@ -755,37 +755,62 @@ def main() -> None:
     parser = build_cli()
     args = parser.parse_args()
 
-    path = Path(args.path)
+    paths = [Path(p) for p in args.path]
 
-    if not path.exists():
-        parser.error(f"Path does not exist: {path}")
+    # Validate paths exist
+    for p in paths:
+        if not p.exists():
+            parser.error(f"Path does not exist: {p}")
 
     try:
-        if path.is_file():
-            result = count_file(str(path), args.timeout, args.hash)
+        # Single file
+        if len(paths) == 1 and paths[0].is_file():
+            result = count_file(str(paths[0]), args.timeout, args.hash)
             if args.format == "json":
                 print(json.dumps(result_to_dict(result), indent=2))
             else:
                 print_result(result)
 
-        elif path.is_dir():
+        # Single directory
+        elif len(paths) == 1 and paths[0].is_dir():
             files = sorted(
-                str(p) for p in path.rglob("*")
+                str(p) for p in paths[0].rglob("*")
                 if p.suffix.lower() in SUPPORTED_EXTENSIONS and p.is_file()
             )
-
             if not files:
-                parser.error(f"No supported files found in {path}")
-
-            logger.info("Processing %d files in %s", len(files), path)
-
+                parser.error(f"No supported files found in {paths[0]}")
+            logger.info("Processing %d files in %s", len(files), paths[0])
             batch = count_files_batch(files, args.workers, args.hash)
-
             if args.format == "json":
                 print(json.dumps(batch_to_dict(batch), indent=2))
             else:
                 print_batch(batch)
+            if args.output:
+                with open(args.output, "w", encoding="utf-8") as f:
+                    json.dump(batch_to_dict(batch), f, indent=2)
+                logger.info("Results written to %s", args.output)
 
+        # Multiple files/directories
+        else:
+            all_files = []
+            for p in paths:
+                if p.is_file():
+                    all_files.append(str(p))
+                elif p.is_dir():
+                    all_files.extend(
+                        str(f) for f in p.rglob("*")
+                        if f.suffix.lower() in SUPPORTED_EXTENSIONS and f.is_file()
+                    )
+            
+            if not all_files:
+                parser.error("No supported files found")
+            
+            logger.info("Processing %d files", len(all_files))
+            batch = count_files_batch(all_files, args.workers, args.hash)
+            if args.format == "json":
+                print(json.dumps(batch_to_dict(batch), indent=2))
+            else:
+                print_batch(batch)
             if args.output:
                 with open(args.output, "w", encoding="utf-8") as f:
                     json.dump(batch_to_dict(batch), f, indent=2)
@@ -798,7 +823,6 @@ def main() -> None:
         logger.exception("Unexpected error")
         print(f"Unexpected error: {e}", file=sys.stderr)
         sys.exit(1)
-
 
 # =============================================================================
 # PUBLIC API
