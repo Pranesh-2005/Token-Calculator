@@ -715,8 +715,9 @@ def build_cli() -> argparse.ArgumentParser:
         description="Token counter for PDF, TXT, MD, DOCX, PPTX files."
     )
     parser.add_argument(
-        "path",
-        help="File or directory to process",
+    "path",
+    nargs="+",
+    help="File(s) or directory to process",
     )
     parser.add_argument(
         "-w", "--workers",
